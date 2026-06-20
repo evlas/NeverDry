@@ -531,7 +531,7 @@ class NeverDryOptionsFlow(config_entries.OptionsFlow):
                 ): selector.TextSelector(),
                 vol.Optional(
                     CONF_ZONE_VALVE,
-                    default=_d(CONF_ZONE_VALVE),
+                    description={"suggested_value": _d(CONF_ZONE_VALVE, None)},
                 ): selector.EntitySelector(ent_sw),
                 vol.Optional(
                     CONF_ZONE_DELIVERY_MODE,
@@ -608,11 +608,11 @@ class NeverDryOptionsFlow(config_entries.OptionsFlow):
                 ),
                 vol.Optional(
                     CONF_ZONE_FLOW_METER_SENSOR,
-                    default=_d(CONF_ZONE_FLOW_METER_SENSOR),
+                    description={"suggested_value": _d(CONF_ZONE_FLOW_METER_SENSOR, None)},
                 ): selector.EntitySelector(ent_sn),
                 vol.Optional(
                     CONF_ZONE_VOLUME_ENTITY,
-                    default=_d(CONF_ZONE_VOLUME_ENTITY),
+                    description={"suggested_value": _d(CONF_ZONE_VOLUME_ENTITY, None)},
                 ): selector.EntitySelector(ent_nr),
                 vol.Optional(
                     CONF_ZONE_DELIVERY_TIMEOUT,

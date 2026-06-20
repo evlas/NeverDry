@@ -93,6 +93,7 @@ class IrrigationController:
         self._irrigation_task: asyncio.Task | None = None
         self._monitoring_mode = not any(zs.valve for zs in zone_sensors)
         self._unsub_monitor = None
+        self._unsubs: list = []
         self._last_service_call: dict[str, float] = {}
         self._current_source: str | None = None
         # Manual valve tracking: valve_entity_id → flow meter reading at valve open
@@ -148,20 +149,22 @@ class IrrigationController:
         # Monitor valve state changes to detect manual irrigation
         valve_entities = [v for v in self._valve_to_zone if v]
         if valve_entities:
-            async_track_state_change_event(self._hass, valve_entities, self._on_valve_state_change)
+            self._unsubs.append(async_track_state_change_event(self._hass, valve_entities, self._on_valve_state_change))
 
         # Monitor battery sensors for low-battery alerts
         battery_entities = [b for b in self._battery_to_zone if b]
         if battery_entities:
-            async_track_state_change_event(self._hass, battery_entities, self._on_battery_change)
+            self._unsubs.append(async_track_state_change_event(self._hass, battery_entities, self._on_battery_change))
 
         # Periodic deficit anomaly check (all modes, every 6h)
         from datetime import timedelta
 
-        async_track_time_interval(
-            self._hass,
-            self._check_deficit_anomaly,
-            timedelta(hours=6),
+        self._unsubs.append(
+            async_track_time_interval(
+                self._hass,
+                self._check_deficit_anomaly,
+                timedelta(hours=6),
+            )
         )
 
         # Set up automatic irrigation per zone based on mode
@@ -174,12 +177,14 @@ class IrrigationController:
                 try:
                     parts = zs.irrigation_time.split(":")
                     hour, minute = int(parts[0]), int(parts[1])
-                    async_track_time_change(
-                        self._hass,
-                        self._make_scheduled_handler(zs.zone_name),
-                        hour=hour,
-                        minute=minute,
-                        second=0,
+                    self._unsubs.append(
+                        async_track_time_change(
+                            self._hass,
+                            self._make_scheduled_handler(zs.zone_name),
+                            hour=hour,
+                            minute=minute,
+                            second=0,
+                        )
                     )
                     _LOGGER.info(
                         "Mode B (scheduled): zone='%s' at %s",
@@ -215,6 +220,7 @@ class IrrigationController:
                 self._check_and_notify,
                 timedelta(hours=6),
             )
+            self._unsubs.append(self._unsub_monitor)
 
     # ── Scheduled irrigation ────────────────────────────────
 
@@ -377,6 +383,9 @@ class IrrigationController:
         if task is not None and not task.done():
             with contextlib.suppress(Exception):
                 await task
+        for unsub in self._unsubs:
+            unsub()
+        self._unsubs.clear()
 
     async def _handle_stop(self, call: ServiceCall) -> None:
         """Emergency stop: close every configured valve concurrently."""
