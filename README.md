@@ -87,7 +87,7 @@ Each zone can be assigned a plant family with seasonal Kc values (northern hemis
 | Native ground cover | 0.25 | 0.45 | 0.55 | 0.35 |
 | Mixed garden (default) | 0.40 | 0.70 | 0.90 | 0.55 |
 
-You can also set a **manual Kc override** per zone (0.1–2.0) if you know the exact value.
+You can also set a **manual Kc override** per zone (0.1–2.0) if you know the exact value. Not sure which Kc fits your setup? Use **[NeverDry Planner](https://drake69.github.io/neverdry-planner/)** to calculate the irrigated area and the right Kc to copy directly into NeverDry.
 
 ---
 
@@ -146,7 +146,7 @@ NeverDry is configured entirely through the UI — no YAML required.
 | System type | Yes | — | Drip / micro-sprinkler / sprinkler / manual |
 | Efficiency | No | (from type) | Override distribution efficiency [0.1–1.0] |
 | Plant family | No | — | Sets seasonal Kc profile |
-| Custom Kc | No | — | Override Kc [0.1–2.0] |
+| Custom Kc | No | — | Override Kc [0.1–2.0] — use [NeverDry Planner](https://drake69.github.io/neverdry-planner/) to estimate it |
 | Flow rate | Yes | — | Valve flow rate [L/min] |
 | Threshold | No | 20.0 | Mode A trigger [mm] |
 | Battery sensor | No | — | Valve battery sensor — mirrored in the zone device card |
