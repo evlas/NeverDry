@@ -250,6 +250,17 @@ STEP_ZONE_SCHEMA = vol.Schema(
 )
 
 
+def _coerce_delivery_mode(user_input: dict) -> dict:
+    """Downgrade delivery_mode to estimated_flow when the required sensor is missing."""
+    dm = user_input.get(CONF_ZONE_DELIVERY_MODE)
+    if (dm == DELIVERY_MODE_FLOW_METER and not user_input.get(CONF_ZONE_FLOW_METER_SENSOR)) or (
+        dm == DELIVERY_MODE_VOLUME_PRESET and not user_input.get(CONF_ZONE_VOLUME_ENTITY)
+    ):
+        user_input = dict(user_input)
+        user_input[CONF_ZONE_DELIVERY_MODE] = DELIVERY_MODE_ESTIMATED_FLOW
+    return user_input
+
+
 class NeverDryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NeverDry."""
 
@@ -409,6 +420,7 @@ class NeverDryOptionsFlow(config_entries.OptionsFlow):
     async def async_step_add_zone(self, user_input: dict[str, Any] | None = None) -> config_entries.ConfigFlowResult:
         """Add a new irrigation zone."""
         if user_input is not None:
+            user_input = _coerce_delivery_mode(user_input)
             new_data = dict(self._config_entry.data)
             zones = list(new_data.get(CONF_ZONES, []))
             # Reject duplicate zone names
@@ -470,6 +482,7 @@ class NeverDryOptionsFlow(config_entries.OptionsFlow):
         )
 
         if user_input is not None:
+            user_input = _coerce_delivery_mode(user_input)
             new_data = dict(self._config_entry.data)
             new_zones = [z for z in zones if z[CONF_ZONE_NAME] != self._edit_zone_name]
             new_zones.append(user_input)
